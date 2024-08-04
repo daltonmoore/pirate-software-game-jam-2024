@@ -1,0 +1,6 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3 uid="uid://ckpmnodeq4oxv"]
+
+[ext_resource type="Texture2D" uid="uid://bgyxlskupu7o6" path="res://art/characters/mask-man/Fall (32x32).png" id="1_7d0fp"]
+
+[resource]
+atlas = ExtResource("1_7d0fp")
