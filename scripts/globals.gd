@@ -1,11 +1,12 @@
 extends Node
 
 # Animation constants
-var ANIM_CONST_IDLE := &"idle"
-var ANIM_CONST_RUN := &"run"
-var ANIM_CONST_JUMP := &"jump"
 var ANIM_CONST_DOUBLE_JUMP := &"double_jump"
 var ANIM_CONST_FALL := &"fall"
+var ANIM_CONST_HIT := &"hit"
+var ANIM_CONST_IDLE := &"idle"
+var ANIM_CONST_JUMP := &"jump"
+var ANIM_CONST_RUN := &"run"
 var ANIM_CONST_WALL_JUMP := &"wall_jump"
 
 # Action constants

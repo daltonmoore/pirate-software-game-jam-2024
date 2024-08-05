@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://d0ahfq442box7"]
+[gd_scene load_steps=13 format=3 uid="uid://d0ahfq442box7"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_vbivm"]
 [ext_resource type="Texture2D" uid="uid://bbg3o5qc5p01f" path="res://art/characters/mask-man/all-in-one.png" id="6_m2dc0"]
@@ -120,11 +120,28 @@ tracks/0/keys = {
 "values": [24, 25, 26, 27, 28]
 }
 
+[sub_resource type="Animation" id="Animation_47pih"]
+resource_name = "hit"
+length = 0.7
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [36, 37, 38, 39, 40, 41, 42]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_7m4uj"]
 _data = {
 "RESET": SubResource("Animation_dfcni"),
 "double_jump": SubResource("Animation_pet3o"),
 "fall": SubResource("Animation_fbjti"),
+"hit": SubResource("Animation_47pih"),
 "idle": SubResource("Animation_w5syd"),
 "jump": SubResource("Animation_o8blx"),
 "run": SubResource("Animation_risj1"),

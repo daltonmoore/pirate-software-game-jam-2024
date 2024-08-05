@@ -1,6 +1,12 @@
+class_name Player
 extends CharacterBody2D
 
-var DEFAULT_GRAVITY := ProjectSettings.get_setting("physics/2d/default_gravity") as float
+enum State {
+	IDLE,
+	WALKING,
+	HIT,
+	DEAD
+}
 
 @export var  WALK_FORCE := 1200
 @export var  WALK_MAX_SPEED := 400
@@ -8,8 +14,9 @@ var DEFAULT_GRAVITY := ProjectSettings.get_setting("physics/2d/default_gravity")
 @export var JUMP_SPEED := 600
 
 var _jump_count := 0
+var _state := State.IDLE
 
-@onready var gravity := DEFAULT_GRAVITY
+@onready var gravity := ProjectSettings.get_setting("physics/2d/default_gravity") as float
 @onready var animation_player := $AnimationPlayer as AnimationPlayer
 @onready var sprite_2d := $Sprite2D as Sprite2D
 @onready var collision_shape_2d := $CollisionShape2D as CollisionShape2D
@@ -51,23 +58,20 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	
 	if is_on_floor():
-		
-		#sprite_2d.rotation = get_floor_angle()
-		#collision_shape_2d.rotation = get_floor_angle()
 		_jump_count = 0
-		if abs(walk) < WALK_FORCE * 0.2:
-			animation_player.play(Globals.ANIM_CONST_IDLE)
-		else:
-			animation_player.play(Globals.ANIM_CONST_RUN)
+		#if abs(walk) < WALK_FORCE * 0.2:
+			#animation_player.play(Globals.ANIM_CONST_IDLE)
+		#else:
+			#animation_player.play(Globals.ANIM_CONST_RUN)
 	
 		# Check for jumping. is_on_floor() must be called after movement code.
 		if Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP):
-			animation_player.play(Globals.ANIM_CONST_JUMP)
+			#animation_player.play(Globals.ANIM_CONST_JUMP)
 			velocity.y = -JUMP_SPEED
 			_jump_count += 1
 	# We're falling
-	elif velocity.y > 0:
-		animation_player.play(Globals.ANIM_CONST_FALL)
+	#elif velocity.y > 0:
+		#animation_player.play(Globals.ANIM_CONST_FALL)
 	
 	_debug_double_jump()
 	
@@ -75,12 +79,25 @@ func _physics_process(delta: float) -> void:
 	if (!is_on_floor() and !is_on_wall() and
 			_jump_count <= 1 and 
 			Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP)):
-		animation_player.play(Globals.ANIM_CONST_DOUBLE_JUMP)
+		#animation_player.play(Globals.ANIM_CONST_DOUBLE_JUMP)
 		velocity.y = -JUMP_SPEED
 		_jump_count += 1
 	
 	_wall_jump()
-	#DebugDraw2d.arrow(position, position + get_floor_normal() * 70)
+	
+	var animation := _get_new_animation()
+	if animation != animation_player.current_animation:
+		animation_player.play(animation)
+		
+	match typeof(_state):
+		State.HIT:
+			print("Hit")
+
+
+func receive_damage() -> void:
+	velocity = Vector2.ZERO
+	_state = State.HIT
+
 
 func _wall_jump() -> void:
 		# Check for Wall jump
@@ -107,6 +124,15 @@ func _wall_jump() -> void:
 			sprite_2d.flip_h = !sprite_2d.flip_h
 
 
+func _get_new_animation() -> StringName:
+	var animation_new: StringName
+	if _state == State.HIT:
+		animation_new = Globals.ANIM_CONST_HIT
+	elif _state == State.IDLE:
+		animation_new = Globals.ANIM_CONST_IDLE
+	return animation_new
+
+
 func _debug_double_jump() -> void:
 	
 	var did_double_jump := (!is_on_floor() and !is_on_wall() and
@@ -123,7 +149,10 @@ func _debug_double_jump() -> void:
 func _on_animation_player_animation_finished(anim_name: StringName) -> void:
 	#print("Finished "+anim_name)
 	if anim_name == Globals.ANIM_CONST_DOUBLE_JUMP:
-		animation_player.play(Globals.ANIM_CONST_FALL)
+		#animation_player.play(Globals.ANIM_CONST_FALL)
+		print()
+	elif anim_name == Globals.ANIM_CONST_HIT:
+		_state = State.IDLE
 
 
 func _on_animation_player_animation_changed(old_name: StringName, new_name: StringName) -> void:
