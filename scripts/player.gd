@@ -3,9 +3,13 @@ extends CharacterBody2D
 
 enum State {
 	IDLE,
-	WALKING,
+	RUNNING,
+	JUMPING,
+	DOUBLE_JUMPING,
+	WALL_JUMP,
+	FALLING,
 	HIT,
-	DEAD
+	DEAD,
 }
 
 @export var  WALK_FORCE := 1200
@@ -14,7 +18,7 @@ enum State {
 @export var JUMP_SPEED := 600
 
 var _jump_count := 0
-var _state := State.IDLE
+var _state : State = State.IDLE
 
 @onready var gravity := ProjectSettings.get_setting("physics/2d/default_gravity") as float
 @onready var animation_player := $AnimationPlayer as AnimationPlayer
@@ -57,21 +61,22 @@ func _physics_process(delta: float) -> void:
 	
 	move_and_slide()
 	
+	# Jump
 	if is_on_floor():
 		_jump_count = 0
-		#if abs(walk) < WALK_FORCE * 0.2:
-			#animation_player.play(Globals.ANIM_CONST_IDLE)
-		#else:
-			#animation_player.play(Globals.ANIM_CONST_RUN)
+		if abs(walk) < WALK_FORCE * 0.2:
+			_state = State.IDLE
+		else:
+			_state = State.RUNNING		
 	
 		# Check for jumping. is_on_floor() must be called after movement code.
 		if Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP):
-			#animation_player.play(Globals.ANIM_CONST_JUMP)
 			velocity.y = -JUMP_SPEED
 			_jump_count += 1
+			_state = State.JUMPING
 	# We're falling
-	#elif velocity.y > 0:
-		#animation_player.play(Globals.ANIM_CONST_FALL)
+	elif velocity.y > 0:
+		_state = State.FALLING
 	
 	_debug_double_jump()
 	
@@ -80,6 +85,7 @@ func _physics_process(delta: float) -> void:
 			_jump_count <= 1 and 
 			Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP)):
 		#animation_player.play(Globals.ANIM_CONST_DOUBLE_JUMP)
+		_state = State.DOUBLE_JUMPING
 		velocity.y = -JUMP_SPEED
 		_jump_count += 1
 	
@@ -87,22 +93,35 @@ func _physics_process(delta: float) -> void:
 	
 	var animation := _get_new_animation()
 	if animation != animation_player.current_animation:
+		print("Getting new anim {a}".format({"a":animation}))
 		animation_player.play(animation)
-		
-	match typeof(_state):
+	
+	# I don't know if I want this match to be here since I am already
+	# checking the state in _get_new_animation()...
+	match _state:
 		State.HIT:
-			print("Hit")
+			pass
+		State.IDLE:
+			pass
+		State.DEAD:
+			pass
+		State.RUNNING:
+			pass
+		_:
+			pass
+	
 
 
 func receive_damage() -> void:
 	velocity = Vector2.ZERO
 	_state = State.HIT
+	print("Receive damage")
 
 
 func _wall_jump() -> void:
 		# Check for Wall jump
 	if is_on_wall():
-		animation_player.play(Globals.ANIM_CONST_WALL_JUMP)
+		_state = State.WALL_JUMP
 		velocity.y = 30
 		
 		var temp := position + JUMP_SPEED * get_wall_normal()
@@ -120,16 +139,30 @@ func _wall_jump() -> void:
 			# TODO: Probaly want to refactor the jump code into a func
 			velocity = JUMP_SPEED * get_wall_normal()
 			velocity.y = -JUMP_SPEED
-			animation_player.play(Globals.ANIM_CONST_JUMP)
+			_state = State.JUMPING
 			sprite_2d.flip_h = !sprite_2d.flip_h
 
 
 func _get_new_animation() -> StringName:
 	var animation_new: StringName
-	if _state == State.HIT:
-		animation_new = Globals.ANIM_CONST_HIT
-	elif _state == State.IDLE:
-		animation_new = Globals.ANIM_CONST_IDLE
+	match _state:
+		State.HIT:
+			animation_new = Globals.ANIM_CONST_HIT
+		State.IDLE:
+			animation_new = Globals.ANIM_CONST_IDLE
+		State.RUNNING:
+			animation_new = Globals.ANIM_CONST_RUN
+		State.JUMPING:
+			animation_new = Globals.ANIM_CONST_JUMP
+		State.FALLING:
+			animation_new = Globals.ANIM_CONST_FALL
+		State.DOUBLE_JUMPING:
+			animation_new = Globals.ANIM_CONST_DOUBLE_JUMP
+		State.WALL_JUMP:
+			animation_new = Globals.ANIM_CONST_WALL_JUMP
+		_:
+			animation_new = ""
+			push_error("YO WTF")
 	return animation_new
 
 
