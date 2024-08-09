@@ -156,6 +156,10 @@ layer_1/tile_data = PackedInt32Array(327681, 393459, 0, 393217, 393459, 1, 45875
 z_index = 10
 y_sort_enabled = true
 position = Vector2(224, 128)
+WALK_FORCE = 1200
+WALK_MAX_SPEED = 400
+STOP_FORCE = 1300
+JUMP_SPEED = 600
 
 [node name="Platform?" type="Sprite2D" parent="."]
 y_sort_enabled = true

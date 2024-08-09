@@ -41,9 +41,12 @@ func _physics_process(delta: float) -> void:
 			Globals.ACTION_CONST_MOVE_RIGHT))
 	
 	# Slow down the player if they're not trying to move.
-	if abs(walk) < WALK_FORCE * 0.2:
+	var is_walking : bool = abs(walk) >= WALK_FORCE * 0.2
+	if !is_walking:
 		# The velocity, slowed down a bit, and then reassigned.
 		velocity.x = move_toward(velocity.x, 0, STOP_FORCE * delta)
+		if _jump_count == 0:
+			_state = State.IDLE
 	else:
 		velocity.x += walk * delta
 		if is_on_floor():
@@ -62,13 +65,48 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	
 	# Jump
-	if is_on_floor():
+	_jump()
+	
+	_debug_double_jump()
+	
+	# Check for Double jump
+	_double_jump()
+	
+	_wall_jump()
+	
+	var animation := _get_new_animation()
+	if animation != animation_player.current_animation:
+		print(animation)
+		print(animation_player.current_animation)
+		print("Getting new anim {a}".format({"a":animation}))
+		animation_player.play(animation)
+	
+	#_handle_state(is_walking)
+
+
+func _handle_state(is_walking: bool) -> void:
+	if _state == State.HIT:
+		print("")
+	elif is_on_floor():
 		_jump_count = 0
-		if abs(walk) < WALK_FORCE * 0.2:
+		if !is_walking:
 			_state = State.IDLE
 		else:
-			_state = State.RUNNING		
+			_state = State.RUNNING
+
+
+func receive_damage(knockback: Vector2) -> void:
+	velocity = Vector2.ZERO
+	_state = State.HIT
+	print("Receive damage")
+	knockback.y = 0 # I don't want any y 
+	DebugDraw2d.arrow(position, knockback + position, Color(1, 0, 1), 1, 1)
 	
+
+
+func _jump() -> void:
+	if is_on_floor():
+		_jump_count = 0
 		# Check for jumping. is_on_floor() must be called after movement code.
 		if Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP):
 			velocity.y = -JUMP_SPEED
@@ -77,45 +115,14 @@ func _physics_process(delta: float) -> void:
 	# We're falling
 	elif velocity.y > 0:
 		_state = State.FALLING
-	
-	_debug_double_jump()
-	
-	# Check for Double jump
-	if (!is_on_floor() and !is_on_wall() and
-			_jump_count <= 1 and 
+
+
+func _double_jump() -> void:
+	if (!is_on_floor() and !is_on_wall() and _jump_count <= 1 and 
 			Input.is_action_just_pressed(Globals.ACTION_CONST_JUMP)):
-		#animation_player.play(Globals.ANIM_CONST_DOUBLE_JUMP)
 		_state = State.DOUBLE_JUMPING
 		velocity.y = -JUMP_SPEED
 		_jump_count += 1
-	
-	_wall_jump()
-	
-	var animation := _get_new_animation()
-	if animation != animation_player.current_animation:
-		print("Getting new anim {a}".format({"a":animation}))
-		animation_player.play(animation)
-	
-	# I don't know if I want this match to be here since I am already
-	# checking the state in _get_new_animation()...
-	match _state:
-		State.HIT:
-			pass
-		State.IDLE:
-			pass
-		State.DEAD:
-			pass
-		State.RUNNING:
-			pass
-		_:
-			pass
-	
-
-
-func receive_damage() -> void:
-	velocity = Vector2.ZERO
-	_state = State.HIT
-	print("Receive damage")
 
 
 func _wall_jump() -> void:

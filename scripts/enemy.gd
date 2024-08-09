@@ -30,9 +30,9 @@ func _physics_process(delta: float) -> void:
 	elif not floor_detector_right.is_colliding():
 		velocity.x = -WALK_SPEED
 	
-	if lastVelocity != velocity.x:
-		print("Last Velocity = {lv}. New Velocity = {nv}".format({"lv": lastVelocity, "nv": velocity.x}))
-		lastVelocity = velocity.x
+	#if lastVelocity != velocity.x:
+		#print("Last Velocity = {lv}. New Velocity = {nv}".format({"lv": lastVelocity, "nv": velocity.x}))
+		#lastVelocity = velocity.x
 	move_and_slide()
 
 
@@ -40,4 +40,5 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 	print(body.name)
 	if body is Player:
 		var player := body as Player
-		player.receive_damage()
+		DebugDraw2d.arrow(position, player.position, Color(1, 0, 1), 1, 0.5)
+		player.receive_damage(player.position-position)
